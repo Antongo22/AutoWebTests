@@ -56,7 +56,12 @@ class CalculatorPage:
 @pytest.fixture(scope="session", autouse=True)
 def clear_allure_history():
     """Фикстура для очистки и создания директории Allure"""
-    allure_dir = os.path.join(os.path.dirname(__file__), "allure-results")
+    current_dir = os.path.dirname(os.path.abspath(__file__))  
+    allure_dir = os.path.join(current_dir, "..", "allure-results") 
+    allure_dir = os.path.abspath(allure_dir) 
+
+    print(f"Каталог Allure: {allure_dir}")
+
     if os.path.exists(allure_dir):
         shutil.rmtree(allure_dir, ignore_errors=True)
     os.makedirs(allure_dir, exist_ok=True)
@@ -64,35 +69,20 @@ def clear_allure_history():
 @pytest.fixture(scope="session")
 def browser():
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless=new")  # Для стабильности в CI
+    options.add_argument("--headless=new")  
     driver = webdriver.Chrome(options=options)
     driver.implicitly_wait(5)
-    driver.set_window_size(1920, 1080)  # Фиксированный размер окна
+    driver.set_window_size(1080, 720) 
     yield driver
     driver.quit()
 
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item):
-    outcome = yield
-    rep = outcome.get_result()
-    if rep.when == "call" and rep.failed:
-        browser = item.funcargs.get("browser")
-        if browser:
-            # Сохраняем скриншот на диск для проверки
-            browser.save_screenshot("debug_screenshot.png")
-            # Прикрепляем в Allure
-            allure.attach(
-                browser.get_screenshot_as_png(),
-                name="screenshot",
-                attachment_type=allure.attachment_type.PNG
-            )
 
 @allure.feature("Тесты калькулятора")
 class TestAdvancedCalculator:
     @allure.story("Основные математические операции")
     @pytest.mark.parametrize("num1,num2,operation,expected", [
         (10, 5, "add", "15.1"),
-        (20, 3, "subtract", "17.0"),
+        (20, 3, "subtract", "17.1"),
         (5, 6, "multiply", "30.0"),
         (100, 4, "divide", "25.0"),
         (0, 5, "add", "5.0"),
