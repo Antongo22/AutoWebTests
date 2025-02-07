@@ -44,6 +44,16 @@ pipeline {
                 '''
             }
         }
+        stage('Start Test Server') {
+            steps {
+                sh '''
+                set -x
+                . venv/bin/activate
+                python app.py &  # Запуск тестируемого приложения
+                sleep 5  # Ожидание, чтобы сервис поднялся
+                '''
+            }
+        }
         stage('Run Tests') {
             steps {
                 sh '''
