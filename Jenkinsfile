@@ -49,7 +49,7 @@ pipeline {
                 sh '''
                 . venv/bin/activate
                 export PYTHONPATH=$PYTHONPATH:$WORKSPACE
-                pytest tests/test_app.py --alluredir=allure-results
+                pytest tests/test_calculator.py --alluredir=allure-results
                 '''
             }
         }
