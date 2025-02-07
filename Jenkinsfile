@@ -66,18 +66,13 @@ pipeline {
                 '''
             }
         }
-        stage('Install Allure') {
-        steps {
-                sh '''
-                set -x
-                sudo apt update
-                sudo apt install -y allure
-                '''
-            }
-        }
         stage('Generate Allure Report') {
             steps {
                 sh '''
+                if ! command -v allure &> /dev/null; then
+                    echo "Allure не найден! Убедитесь, что он установлен."
+                    exit 1
+                fi
                 allure generate allure-results --clean -o allure-report
                 '''
             }
