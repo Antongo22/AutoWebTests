@@ -49,11 +49,12 @@ pipeline {
                 sh '''
                 set -x
                 . venv/bin/activate
-                uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
+                uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 &
                 sleep 5
                 '''
             }
         }
+
         stage('Run Tests') {
             steps {
                 sh '''
