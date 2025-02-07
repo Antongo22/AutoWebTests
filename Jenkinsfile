@@ -49,14 +49,15 @@ pipeline {
                 sh '''
                 set -x
                 . venv/bin/activate
-                python app.py &  # Запуск тестируемого приложения
-                sleep 5  # Ожидание, чтобы сервис поднялся
+                uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
+                sleep 5
                 '''
             }
         }
         stage('Run Tests') {
             steps {
                 sh '''
+                set -x
                 . venv/bin/activate
                 export PYTHONPATH=$PYTHONPATH:$WORKSPACE
                 pytest tests/test_calculator.py --alluredir=allure-results
