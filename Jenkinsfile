@@ -55,7 +55,7 @@ pipeline {
                 jdk: '',
                 properties: [],
                 reportBuildPolicy: 'ALWAYS',
-                installation: 'Allure 2.32.2', // Исправленный параметр
+                installation: 'Allure 2.32.2',
                 results: [[path: 'allure-results']]
             )
         }
