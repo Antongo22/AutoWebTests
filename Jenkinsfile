@@ -2,10 +2,10 @@ pipeline {
     agent {
         docker {
             image 'python:3.9-slim'
-            args '-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0' 
+            args '-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0'
         }
     }
-    
+
     environment {
         ALLURE_RESULTS = 'allure-results'
     }
@@ -17,13 +17,13 @@ pipeline {
                 sh 'python -m pip install --upgrade pip'
             }
         }
-        
+
         stage('Install Dependencies') {
             steps {
                 sh 'pip install -r requirements.txt'
             }
         }
-        
+
         stage('Run Server') {
             steps {
                 sh '''
@@ -33,7 +33,7 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Run Tests') {
             steps {
                 sh '''
@@ -47,16 +47,16 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
-            allure([
+            allure(
                 includeProperties: false,
                 jdk: '',
                 properties: [],
                 reportBuildPolicy: 'ALWAYS',
                 results: [[path: 'allure-results']]
-            ])
+            )
         }
     }
 }
