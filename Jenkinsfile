@@ -24,6 +24,7 @@ pipeline {
                 which pip
                 pip install --upgrade pip
                 pip install -r requirements.txt
+                pip install jinja2
                 '''
             }
         }
