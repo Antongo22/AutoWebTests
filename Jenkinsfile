@@ -30,16 +30,12 @@ pipeline {
         }
         stage('Check Access Rights') {
             steps {
-                sh '''
-                set -x
-                ls -l venv/bin/pytest
-                '''
+                sh 'ls -l venv/bin/pytest'
             }
         }
         stage('Fix Permissions') {
             steps {
                 sh '''
-                set -x
                 chmod +x venv/bin/pytest
                 ls -l venv/bin/pytest
                 '''
@@ -48,7 +44,6 @@ pipeline {
         stage('Start Test Server') {
             steps {
                 sh '''
-                set -x
                 . venv/bin/activate
                 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 &
                 sleep 5
@@ -58,7 +53,6 @@ pipeline {
         stage('Run Tests') {
             steps {
                 sh '''
-                set -x
                 . venv/bin/activate
                 export PYTHONPATH=$PYTHONPATH:$WORKSPACE
                 pytest tests/test_calculator.py --alluredir=allure-results
@@ -68,11 +62,11 @@ pipeline {
         stage('Generate Allure Report') {
             steps {
                 script {
-                    def allurePath = sh(script: 'which allure', returnStdout: true).trim()
-                    if (allurePath) {
+                    def allureExists = sh(script: 'which allure || echo "not_found"', returnStdout: true).trim()
+                    if (allureExists != "not_found") {
                         sh 'allure generate allure-results --clean -o allure-report'
                     } else {
-                        echo "⚠️ Allure не найден! Чтобы открыть отчёт, выполните в терминале:"
+                        echo "⚠️ Allure не найден! Чтобы открыть отчёт вручную, выполните:"
                         echo "cd ${env.WORKSPACE} && allure serve allure-results"
                     }
                 }
@@ -80,9 +74,7 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sh '''
-                echo "Deployment successful."
-                '''
+                sh 'echo "Deployment successful."'
             }
         }
     }
@@ -91,7 +83,9 @@ pipeline {
             archiveArtifacts artifacts: 'allure-results/*', fingerprint: true
         }
         failure {
-            sh 'echo "Pipeline failed. Check the logs."'
+            script {
+                echo "⚠️ Pipeline завершился с ошибкой, но мы не падаем из-за отсутствия Allure."
+            }
         }
     }
 }
