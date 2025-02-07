@@ -1,61 +1,62 @@
 pipeline {
-    agent any
-
+    agent {
+        docker {
+            image 'python:3.9-slim'
+            args '-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0' 
+        }
+    }
+    
     environment {
-        // Укажите путь к вашему проекту
-        PROJECT_DIR = 'app'
-        // Путь для хранения отчетов Allure
-        ALLURE_RESULT_DIR = 'allure-results'
-        // Версия Python (если используете Python)
-        PYTHON_VERSION = '3.8'
+        ALLURE_RESULTS = 'allure-results'
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                // Получение кода из репозитория
-                git 'https://github.com/yourusername/your-repo.git'
-            }
-        }
-
         stage('Setup Environment') {
             steps {
-                // Установка зависимостей (например, для Python)
-                sh 'python3 -m venv venv'
-                sh 'venv/bin/pip install -r requirements.txt'
+                sh 'apt-get update && apt-get install -y chromium-driver'
+                sh 'python -m pip install --upgrade pip'
             }
         }
-
-        stage('Run Tests') {
+        
+        stage('Install Dependencies') {
             steps {
-                // Запуск тестов и генерация отчетов Allure
+                sh 'pip install -r requirements.txt'
+            }
+        }
+        
+        stage('Run Server') {
+            steps {
                 sh '''
-                    export PATH="$WORKSPACE/venv/bin:$PATH"
-                    pytest --alluredir=allure-results
+                uvicorn main:app --host 0.0.0.0 --port 8000 &
+                echo $! > server.pid
+                sleep 5  
                 '''
             }
         }
-
-        stage('Generate Allure Report') {
+        
+        stage('Run Tests') {
             steps {
-                // Генерация отчета Allure
-                allure includeProperties: false, jdk: '', reportDir: 'allure-results'
+                sh '''
+                pytest --alluredir=${ALLURE_RESULTS} tests/
+                '''
+            }
+            post {
+                always {
+                    sh 'kill $(cat server.pid) || true'  
+                }
             }
         }
     }
-
+    
     post {
         always {
-            // Архивирование отчетов Allure
-            archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
-            // Публикация отчета Allure
-            allure includeProperties: false, jdk: '', reportDir: 'allure-results'
-        }
-        failure {
-            // Отправка уведомлений (например, по email) в случае провала
-            mail to: 'anton005go.too@gmail.com',
-                 subject: "Jenkins Build Failed: ${currentBuild.fullDisplayName}",
-                 body: "Something is wrong with ${env.BUILD_URL}"
+            allure([
+                includeProperties: false,
+                jdk: '',
+                properties: [],
+                reportBuildPolicy: 'ALWAYS',
+                results: [[path: 'allure-results']]
+            ])
         }
     }
 }
