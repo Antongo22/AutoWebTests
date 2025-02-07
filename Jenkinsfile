@@ -61,14 +61,17 @@ pipeline {
     // Пост-обработка (генерация Allure-отчета)
     post {
         always {
-            allure(
+            script {
+                // Проверяем, что директория с результатами существует
+                sh 'ls -la ${ALLURE_RESULTS}'
+            }
+            allure([
                 includeProperties: false,
                 jdk: '',
                 properties: [],
                 reportBuildPolicy: 'ALWAYS',
-                allureInstallation: 'Allure 2.32.2', // Используйте имя, которое вы указали в Global Tool Configuration
                 results: [[path: 'allure-results']]
-            )
+            ])
         }
     }
 }
