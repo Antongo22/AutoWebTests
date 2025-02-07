@@ -81,8 +81,8 @@ def browser():
 class TestAdvancedCalculator:
     @allure.story("Основные математические операции")
     @pytest.mark.parametrize("num1,num2,operation,expected", [
-        (10, 5, "add", "15.1"),
-        (20, 3, "subtract", "17.1"),
+        (10, 5, "add", "15.0"),
+        (20, 3, "subtract", "17.0"),
         (5, 6, "multiply", "30.0"),
         (100, 4, "divide", "25.0"),
         (0, 5, "add", "5.0"),
