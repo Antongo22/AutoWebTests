@@ -1,77 +1,79 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.9-slim'
-            args '-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0 --privileged'
-        }
-    }
-
-    environment {
-        ALLURE_RESULTS = 'allure-results'
-    }
-
+    agent any
     stages {
-        // Установка необходимых зависимостей
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
         stage('Setup Environment') {
             steps {
                 sh '''
-                    apt-get update && apt-get install -y \
-                    chromium \
-                    chromium-driver \
-                    wget \
-                    unzip
+                set -x
+                python3 -m venv venv
+                chmod -R 755 venv
                 '''
-                sh 'python -m pip install --upgrade pip'
             }
         }
-
-        // Установка Python-зависимостей
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
-            }
-        }
-
-        // Запуск FastAPI сервера
-        stage('Run Server') {
-            steps {
                 sh '''
-                    uvicorn main:app --host 0.0.0.0 --port 8000 &
-                    echo $! > server.pid
-                    sleep 5  # Даем серверу время на запуск
+                set -x
+                . venv/bin/activate
+                python --version
+                which pip
+                pip install --upgrade pip
+                pip install -r requirements.txt
                 '''
             }
         }
-
-        // Запуск тестов
+        stage('Check Access Rights') {
+            steps {
+                sh '''
+                set -x
+                ls -l venv/bin/pytest
+                '''
+            }
+        }
+        stage('Fix Permissions') {
+            steps {
+                sh '''
+                set -x
+                chmod +x venv/bin/pytest
+                ls -l venv/bin/pytest
+                '''
+            }
+        }
         stage('Run Tests') {
             steps {
                 sh '''
-                    pytest --alluredir=${ALLURE_RESULTS} tests/
+                . venv/bin/activate
+                export PYTHONPATH=$PYTHONPATH:$WORKSPACE
+                pytest tests/test_app.py --alluredir=allure-results
                 '''
             }
-            post {
-                always {
-                    sh 'kill $(cat server.pid) || true'  // Останавливаем сервер
-                }
+        }
+        stage('Generate Allure Report') {
+            steps {
+                sh '''
+                allure generate allure-results --clean -o allure-report
+                '''
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh '''
+                echo "Deployment successful."
+                '''
             }
         }
     }
-
-    // Пост-обработка (генерация Allure-отчета)
     post {
         always {
-            script {
-                // Проверяем, что директория с результатами существует
-                sh 'ls -la ${ALLURE_RESULTS}'
-            }
-            allure([
-                includeProperties: false,
-                jdk: '',
-                properties: [],
-                reportBuildPolicy: 'ALWAYS',
-                results: [[path: 'allure-results']]
-            ])
+            archiveArtifacts artifacts: 'allure-results/*', fingerprint: true
+        }
+        failure {
+            sh 'echo "Pipeline failed. Check the logs."'
         }
     }
 }
