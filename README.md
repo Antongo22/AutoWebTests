@@ -51,3 +51,6 @@ allure serve allure-results
 
 ## 📸 Скриншоты (демонстрация работы Jenkins)
 
+![image](https://github.com/user-attachments/assets/59a79587-70ba-40b0-a812-4220384fb5d3)
+![image](https://github.com/user-attachments/assets/74ae7009-fb87-4b99-8127-1b75fe44d4be)
+![image](https://github.com/user-attachments/assets/3c30cd6e-e4b7-49aa-91ea-1ee6a1886d75)
