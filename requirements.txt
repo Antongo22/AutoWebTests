@@ -1,0 +1,7 @@
+pytest
+selenium
+allure-pytest
+fastapi
+uvicorn
+python-multipart
+pydantic
