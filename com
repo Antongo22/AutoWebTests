@@ -21,3 +21,8 @@ allure serve allure-results
 
 
 pytest tests/ --alluredir=allure-results -v -s --disable-pytest-warnings
+
+
+python3 -m venv venv
+
+source venv/bin/activate
