@@ -2,10 +2,10 @@ pipeline {
     agent {
         docker {
             image 'python:3.9-slim'
-            args '-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0'
+            args '-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0' 
         }
     }
-
+    
     environment {
         ALLURE_RESULTS = 'allure-results'
     }
@@ -17,28 +17,28 @@ pipeline {
                 sh 'python -m pip install --upgrade pip'
             }
         }
-
+        
         stage('Install Dependencies') {
             steps {
                 sh 'pip install -r requirements.txt'
             }
         }
-
+        
         stage('Run Server') {
             steps {
-                sh '''
-                uvicorn main:app --host 0.0.0.0 --port 8000 &
-                echo $! > server.pid
-                sleep 5  
-                '''
+                sh ''' 
+                uvicorn main:app --host 0.0.0.0 --port 8000 & 
+                echo $! > server.pid 
+                sleep 5   
+                ''' 
             }
         }
-
+        
         stage('Run Tests') {
             steps {
-                sh '''
-                pytest --alluredir=${ALLURE_RESULTS} tests/
-                '''
+                sh ''' 
+                pytest --alluredir=${ALLURE_RESULTS} tests/ 
+                ''' 
             }
             post {
                 always {
@@ -47,7 +47,7 @@ pipeline {
             }
         }
     }
-
+    
     post {
         always {
             allure(
@@ -55,7 +55,7 @@ pipeline {
                 jdk: '',
                 properties: [],
                 reportBuildPolicy: 'ALWAYS',
-                allureInstallation: 'Allure 2.32.2',
+                installation: 'Allure 2.32.2', // Исправленный параметр
                 results: [[path: 'allure-results']]
             )
         }
