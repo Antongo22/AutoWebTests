@@ -66,6 +66,15 @@ pipeline {
                 '''
             }
         }
+        stage('Install Allure') {
+        steps {
+                sh '''
+                set -x
+                sudo apt update
+                sudo apt install -y allure
+                '''
+            }
+        }
         stage('Generate Allure Report') {
             steps {
                 sh '''
